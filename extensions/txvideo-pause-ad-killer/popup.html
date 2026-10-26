@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>腾讯视频暂停广告清理</title>
+<style>
+  :root {
+    --bg: #171a21;
+    --panel: #1f232c;
+    --line: #2c323d;
+    --text: #e6e9ef;
+    --dim: #8b94a5;
+    --accent: #12a594;
+  }
+  * { box-sizing: border-box; }
+  body {
+    width: 288px;
+    margin: 0;
+    padding: 14px 16px 16px;
+    background: var(--bg);
+    color: var(--text);
+    font: 13px/1.6 -apple-system, "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px rgba(18,165,148,.18);
+  }
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 9px 12px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .row:hover { border-color: #3a4150; }
+  .row span { color: var(--text); }
+  .row small {
+    display: block;
+    color: var(--dim);
+    font-size: 11px;
+    line-height: 1.4;
+    margin-top: 1px;
+  }
+  input[type="checkbox"] {
+    appearance: none;
+    width: 36px; height: 20px;
+    border-radius: 10px;
+    background: #3a4150;
+    position: relative;
+    flex: 0 0 auto;
+    cursor: pointer;
+    transition: background .16s ease;
+    margin: 0;
+  }
+  input[type="checkbox"]::after {
+    content: "";
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform .16s ease;
+  }
+  input[type="checkbox"]:checked { background: var(--accent); }
+  input[type="checkbox"]:checked::after { transform: translateX(16px); }
+  .stat {
+    margin: 10px 0 8px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    background: #12151b;
+    border: 1px dashed var(--line);
+    color: var(--dim);
+    font-size: 12px;
+    min-height: 34px;
+  }
+  .stat b { color: var(--accent); font-size: 14px; }
+  button {
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--text);
+    font: inherit;
+    cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  button:active { transform: translateY(1px); }
+  .foot {
+    margin-top: 10px;
+    color: var(--dim);
+    font-size: 11px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+  <div class="title"><i class="dot"></i>腾讯视频暂停广告清理</div>
+
+  <label class="row">
+    <span>启用清理<small>暂停时自动隐藏广告浮层</small></span>
+    <input type="checkbox" id="enabled">
+  </label>
+
+  <label class="row">
+    <span>尝试点关闭<small>部分版本需点广告自带的关闭</small></span>
+    <input type="checkbox" id="autoClose">
+  </label>
+
+  <label class="row">
+    <span>调试日志<small>控制台输出命中记录</small></span>
+    <input type="checkbox" id="debug">
+  </label>
+
+  <div class="stat" id="stat">正在读取当前页面…</div>
+
+  <button id="rescan">立即清理一次</button>
+
+  <div class="foot">修改后刷新视频页生效。仅在 v.qq.com 生效。</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+# ---- 依赖 ----
+node_modules/
+package-lock.json.bak
+
+# ---- 构建产物 ----
+dist/
+build/
+
+# ---- 打包产物 ----
+release/
+*.zip
+*.crx
+*.xpi
+# Chrome 打包私钥，绝不入库
+*.pem
+*.key
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# ---- 系统 ----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- 编辑器 ----
+.idea/
+.vscode/
+*.suo
+*.swp
+*.swo
+
+# ---- 临时 ----
+*.log
+*.tmp
+*.bak

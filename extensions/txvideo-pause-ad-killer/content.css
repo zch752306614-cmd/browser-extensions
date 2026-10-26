@@ -1,0 +1,35 @@
+/* ---------------------------------------------------------------
+   腾讯视频暂停广告清理 —— CSS 兜底层
+   作用：在 JS 逻辑跑起来之前（或播放器版本变化时），先用样式把
+        已知的暂停广告容器压掉，避免广告"闪一下"再消失。
+   注意：这里只写足够具体的选择器，避免误伤正常播放器 UI。
+   --------------------------------------------------------------- */
+
+#txp_ad_pause,
+#txp_ad_pause_mask,
+#txp_ad_pop,
+#txp_ad_mask,
+.txp_ad_pause,
+.txp_ad_pause_mask,
+.txp_ad_pop,
+.txp_ad_mask,
+.txp-pause-ad,
+.txp-pause-ad-mask,
+.txp_pause_ad,
+.txv-pause-ad,
+.txv_pause_ad,
+.txv-ad-pause,
+.player-pause-ad,
+.pause-ad-container,
+.video-pause-ad,
+[class*="txp_ad_pause"],
+[class*="txp-ad-pause"],
+[class*="pause-ad-mask"],
+[data-txp-pause-ad] {
+  display: none !important;
+}
+
+/* content.js 命中后打的标记，双保险 */
+[data-txvpa] {
+  display: none !important;
+}
