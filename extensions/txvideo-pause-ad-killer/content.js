@@ -105,14 +105,10 @@
 
   // 暂停广告根容器（2026-10 真实页面实证 + 历史版本兼容）
   const AD_ROOTS = [
-    '.txp_full_screen_pause-active',   // 全屏型（当前主形态）
-    '.txp_full_screen_pause-bg',       // 横幅型
+    '.txp_full_screen_pause-active',   // 全屏型
+    '.txp_full_screen_pause-bg',       // 横幅型（实测出现）
     '.txp_full_screen_pause-bg-v2',    // 横幅型 v2
-    '.txp_zt',                         // 旧版全屏型
-    '#txp_ad_pause',
-    '.txp_ad_pause',
-    '.txp-pause-ad',
-    '.txv-pause-ad',
+    '.txp_zt',                         // 旧版播放器（内核枚举 AD_TYPE.ZT）
     '.txp_zt_content'
   ];
 
@@ -125,12 +121,9 @@
 
   // 关闭按钮（从最精确到最宽）
   const CLOSE_SELECTORS = [
-    '.txp_full_screen_pause-close',   // 「关闭广告」（实证）
+    '.txp_full_screen_pause-close',   // 「关闭广告」（实测：-active 与 -bg 两种形态都有）
     '.txp_zt_close .close',
-    '.txp_zt_close',
-    '.txp_ad_close',
-    '.txp_btn_close_ad',
-    '.txp_ad_pause .close'
+    '.txp_zt_close'
   ];
 
   /** 隐藏广告内的 <video>，停声停流量 */
@@ -446,7 +439,7 @@
       adCandidates: []
     };
 
-    const probes = '.txp_full_screen_pause-active,.txp_full_screen_pause-bg,.txp_full_screen_pause-bg-v2,.txp_full_screen_pause-close,.txp_zt,.txp_zt_content,.txp_zt_close,[class*="zt_"],[class*="pause_ad"],[class*="pause-ad"],[class*="txp_ad"]';
+    const probes = '.txp_full_screen_pause-active,.txp_full_screen_pause-bg,.txp_full_screen_pause-bg-v2,.txp_full_screen_pause-close,.txp_zt,.txp_zt_content,.txp_zt_close';
     let found;
     try { found = document.querySelectorAll(probes); } catch (_) { found = []; }
     for (let i = 0; i < found.length && i < 20; i++) {

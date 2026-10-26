@@ -10,6 +10,25 @@
 2. 开启右上角「开发者模式」
 3. 「加载已解压的扩展程序」→ 选择本目录（`txvideo-pause-ad-killer`）
 
+## ⚠ 更新扩展时的坑（必须知道）
+
+Chrome 137+ 会把「加载已解压的扩展」**复制**一份到 profile 内：
+
+```
+%LOCALAPPDATA%\Google\Chrome\User Data\Default\UnpackedExtensions\<名称>-<版本>_<id>
+```
+
+之后 Chrome 实际运行的是**那份副本**，不是你的源目录。所以改了源码再点「重新加载」，
+如果副本没更新，跑的还是旧代码（本扩展曾因此被误判为"没效果"，实际是 Chrome 一直在跑 v1.0.0 快照）。
+
+正确做法，二选一：
+
+- **改完源目录后**：在 `chrome://extensions/` 里**移除**旧条目 → 重新「加载已解压的扩展程序」指向源目录，让它重新复制
+- **要给已加载的副本打补丁**：直接把文件覆盖到上面那个 `UnpackedExtensions\...` 目录，再点卡片上的刷新按钮
+
+判断当前跑的是哪版：打开扩展弹窗，底部有版本号；或页面控制台执行
+`document.documentElement.dataset.txvpaReady`，返回 `1` 表示 content script 已注入。
+
 ## 真实广告结构（实证）
 
 暂停时播放器插入：
