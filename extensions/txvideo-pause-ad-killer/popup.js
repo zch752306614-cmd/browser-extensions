@@ -1,4 +1,4 @@
-/* popup 控制面板逻辑 —— v2.1.0 */
+/* popup 控制面板逻辑 —— v2.2.0 */
 'use strict';
 
 const DEFAULTS = { enabled: true, autoClose: true, hideLayer: true, debug: false };

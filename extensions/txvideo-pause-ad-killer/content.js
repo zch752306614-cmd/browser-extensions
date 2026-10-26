@@ -1,8 +1,26 @@
 /*!
- * TxVideoPauseAdKiller v2.1.0 —— 腾讯视频暂停广告清理
+ * TxVideoPauseAdKiller v2.2.0 —— 腾讯视频暂停广告清理
  * 作用域：仅 v.qq.com
  *
- *  ── 本版关键变更（基于真实页面抓取实证）──────────────────
+ *  ── v2.2.0 修复（鼠标点击播放/暂停失效）────────────────────
+ *  根因：L3 几何兜底把播放器的「点击遮罩」当广告浮层隐藏了。
+ *  superplayer-txv-light.js 实证：点击遮罩就是 .thumbplayer-user-mod
+ *    A.classList.add("thumbplayer-user-mod")
+ *    A.style = {width:100%,height:100%,position:absolute,z-index:1}
+ *    A.addEventListener("click", ...)   ← 点击切换 PLAY/PAUSE 就在这里
+ *  它满足 L3 的全部条件（铺满视频、绝对定位、可点击），于是每次暂停都被
+ *  display:none 掉 → 鼠标点击失去接收者，空格键走键盘事件所以仍可用，
+ *  与「第一次暂停后点击失效、空格正常」的现象完全吻合。
+ *
+ *  修复：
+ *   ① PROTECT 名单 —— thumbplayer-user-mod / plugin_ctrl_* / txp_ctrl|control
+ *      |click|progress|danmu… 一律不碰，含这些节点的容器也不碰
+ *   ② L3 增加广告特征前置校验（hasAdSignal）—— 无广告特征绝不处理，
+ *      避免「宁可错杀」的兜底逻辑误伤播放器自身 UI
+ *   ③ 自愈 —— 启动与每轮扫描把历史上被误标记的受保护节点还原
+ *  ────────────────────────────────────────────────────────────
+ *
+ *  ── v2.1.0 关键变更（基于真实页面抓取实证）──────────────────
  *  用登录态真实环境触发暂停广告，MutationObserver 抓到实际 DOM：
  *
  *    <div class="creative-player-4-layer">
@@ -126,6 +144,77 @@
     '.txp_zt_close'
   ];
 
+  /* ============ 受保护节点：播放器自身交互层，绝不能隐藏 ============ */
+
+  // thumbplayer-user-mod    —— 点击遮罩（click mask），click 在此切换播放/暂停
+  // plugin_ctrl_txp_shadow  —— 控制条阴影层，100% 铺满、z-index 2，负责鼠标移动唤出控制条
+  // plugin_ctrl_txp_bottom  —— 底部控制条
+  // txp_progress / txp_control / txp_danmu … —— 进度条、控制层、弹幕层
+  const PROTECT_RE = /thumbplayer-user-mod|plugin_ctrl[\w-]*|txp_(?:ctrl|control|click|progress|danmu|barrage|tooltip|tip|loading|volume|quality|rate|setting|fullscreen|center_btn|videos_container)/i;
+
+  function isProtected(el) {
+    if (!el || el.nodeType !== 1) return false;
+    if (el.id === 'player-component' || el.id === 'main-player') return true;
+    if (PROTECT_RE.test(clsOf(el) + ' ' + (el.id || ''))) return true;
+    // 内部装着点击遮罩/控制条的容器同样不能动（否则等于间接废掉点击）
+    try {
+      if (el.querySelector && el.querySelector('.thumbplayer-user-mod,.plugin_ctrl_txp_bottom,.plugin_ctrl_txp_shadow')) return true;
+    } catch (_) { /* ignore */ }
+    return false;
+  }
+
+  /**
+   * 是否为明确的广告根（AD_ROOTS 命中）。
+   * 这类节点优先交给 L1 关闭按钮，关闭失败时允许隐藏——即便内部含点击遮罩。
+   */
+  function isKnownAdRoot(el) {
+    for (let i = 0; i < AD_ROOTS.length; i++) {
+      try { if (el.matches(AD_ROOTS[i])) return true; } catch (_) { /* ignore */ }
+    }
+    return false;
+  }
+
+  /**
+   * 广告特征校验：L3 兜底只允许处理「有广告证据」的浮层。
+   * 宁可漏掉一个改版后的未知广告，也不能再误伤播放器交互层。
+   */
+  function hasAdSignal(el) {
+    const c = (clsOf(el) + ' ' + (el.id || '')).toLowerCase();
+    if (/creative|full_screen_pause|txp_zt|pause_ad|pause-ad|(^|[^a-z])ads?([^a-z]|$)|promotion|sponsor/.test(c)) return true;
+    try {
+      if (el.closest && el.closest('[class*="creative-player"],[data-tag="creative-player"]')) return true;
+    } catch (_) { /* ignore */ }
+    let t = '';
+    try { t = (el.textContent || '').slice(0, 120); } catch (_) { /* ignore */ }
+    return /广告|赞助|了解更多|了解详情|跳过广告/.test(t);
+  }
+
+  /**
+   * 自愈：把历史上被旧版 L3 误隐藏的受保护节点还原。
+   * 旧版（≤2.1.0）曾把 thumbplayer-user-mod 隐藏，导致点击失效；
+   * 升级后即使用户不刷新页面，也能在下一次扫描时自动恢复。
+   */
+  function healProtected() {
+    let marked;
+    try { marked = document.querySelectorAll('[' + MARK + ']'); } catch (_) { return 0; }
+    let n = 0;
+    for (let i = 0; i < marked.length; i++) {
+      const el = marked[i];
+      if (isKnownAdRoot(el)) continue;   // 真广告别还原
+      const reason = el.getAttribute(MARK);
+      const wrong = isProtected(el) || (reason === 'geometry' && !hasAdSignal(el));
+      if (!wrong) continue;
+      try {
+        el.removeAttribute(MARK);
+        el.style.removeProperty('display');
+        el.style.removeProperty('pointer-events');
+        n++;
+        log('已还原误隐藏节点', reason, '→', clsOf(el) || el.id || el.tagName);
+      } catch (_) { /* ignore */ }
+    }
+    return n;
+  }
+
   /** 隐藏广告内的 <video>，停声停流量 */
   function pauseAdVideos(root) {
     try {
@@ -202,6 +291,13 @@
     if (!el || el.nodeType !== 1) return false;
     if (el === document.body || el === document.documentElement) return false;
     if (el.hasAttribute(MARK)) return false;
+
+    // 播放器自身交互层一律不动（否则鼠标点击播放/暂停会失效）
+    // 例外：明确命中 AD_ROOTS 的广告根即使内部含遮罩也要能隐藏
+    if (isProtected(el) && !isKnownAdRoot(el)) {
+      log('跳过受保护节点', reason, '→', clsOf(el) || el.id || el.tagName);
+      return false;
+    }
 
     const v = findVideo();
     // 绝不隐藏 video 自身或其祖先（否则整个播放器会消失）
@@ -304,6 +400,8 @@
       if (el.hasAttribute(CLOSING)) continue;  // 正在等官方关闭生效，别抢它的活
       if (el.contains(v)) continue;          // 祖先链跳过
       if (!isShown(el)) continue;
+      if (isProtected(el)) continue;         // 点击遮罩 / 控制条等交互层，绝不碰
+      if (!hasAdSignal(el)) continue;        // 没有广告特征 → 不是广告，放过
 
       const r = el.getBoundingClientRect();
       if (r.height < vr.height * 0.35) continue;       // 控制条 / 提示条排除
@@ -324,6 +422,7 @@
   }
 
   function sweepAll() {
+    healProtected();
     const a = sweepExact();
     const b = sweepGeometry();
     return a + b;
@@ -406,6 +505,7 @@
       if (!cfg.enabled || document.visibilityState === 'hidden') return;
       const v = findVideo();
       if (v) bindVideo(v);
+      try { healProtected(); } catch (_) { /* ignore */ }
       try { sweepExact(); } catch (_) { /* ignore */ }
     }, 1500);
   }
@@ -536,8 +636,9 @@
       chrome.storage.local.get(DEFAULTS, (v) => {
         Object.assign(cfg, DEFAULTS, v || {});
         if (cfg.debug) document.documentElement.setAttribute('data-txvpa-debug', '1');
-        log('v2.1.0 启动', cfg);
+        log('v2.2.0 启动', cfg);
         if (!cfg.enabled) return;
+        try { healProtected(); } catch (_) { /* ignore */ }
         startObserver();
         const v0 = findVideo();
         if (v0) bindVideo(v0);

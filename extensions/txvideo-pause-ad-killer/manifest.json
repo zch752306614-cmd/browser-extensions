@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "腾讯视频暂停广告清理",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "自动关闭腾讯视频（v.qq.com）播放暂停时弹出的广告浮层，直接露出当前视频画面。",
   "minimum_chrome_version": "102",
   "permissions": ["storage"],
