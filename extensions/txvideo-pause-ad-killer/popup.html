@@ -103,6 +103,22 @@
   }
   button:hover { border-color: var(--accent); color: var(--accent); }
   button:active { transform: translateY(1px); }
+  .btns { display: flex; gap: 8px; }
+  .btns button { flex: 1; }
+  .out {
+    margin: 10px 0 0;
+    padding: 8px 10px;
+    max-height: 200px;
+    overflow: auto;
+    background: #12151b;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--dim);
+    font: 11px/1.55 Consolas, "Courier New", monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
+    user-select: text;
+  }
   .foot {
     margin-top: 10px;
     color: var(--dim);
@@ -131,9 +147,14 @@
 
   <div class="stat" id="stat">正在读取当前页面…</div>
 
-  <button id="rescan">立即清理一次</button>
+  <div class="btns">
+    <button id="rescan">立即清理一次</button>
+    <button id="diag">诊断当前页</button>
+  </div>
 
-  <div class="foot">修改后刷新视频页生效。仅在 v.qq.com 生效。</div>
+  <pre class="out" id="out" hidden></pre>
+
+  <div class="foot">v2.1.0 · 修改后刷新视频页生效 · 仅在 v.qq.com 生效</div>
 
   <script src="popup.js"></script>
 </body>

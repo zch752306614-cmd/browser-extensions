@@ -1,35 +1,15 @@
 /* ---------------------------------------------------------------
-   腾讯视频暂停广告清理 —— CSS 兜底层
-   作用：在 JS 逻辑跑起来之前（或播放器版本变化时），先用样式把
-        已知的暂停广告容器压掉，避免广告"闪一下"再消失。
-   注意：这里只写足够具体的选择器，避免误伤正常播放器 UI。
+   腾讯视频暂停广告清理 —— CSS 强化层 v2.1.0
+   说明：实际的隐藏动作由 content.js 完成（它需要先尝试点关闭按钮
+        走官方关闭路径）。这里只对「已被 JS 判定为广告」的元素做样式
+        强化，保证即使内联样式被播放器覆盖，元素依然是隐藏的。
+
+        刻意不对广告根做全局预隐藏——关闭按钮会失去可见性，
+        JS 就点不到它了，且播放器可能因此不恢复主视频几何。
    --------------------------------------------------------------- */
 
-#txp_ad_pause,
-#txp_ad_pause_mask,
-#txp_ad_pop,
-#txp_ad_mask,
-.txp_ad_pause,
-.txp_ad_pause_mask,
-.txp_ad_pop,
-.txp_ad_mask,
-.txp-pause-ad,
-.txp-pause-ad-mask,
-.txp_pause_ad,
-.txv-pause-ad,
-.txv_pause_ad,
-.txv-ad-pause,
-.player-pause-ad,
-.pause-ad-container,
-.video-pause-ad,
-[class*="txp_ad_pause"],
-[class*="txp-ad-pause"],
-[class*="pause-ad-mask"],
-[data-txp-pause-ad] {
-  display: none !important;
-}
-
-/* content.js 命中后打的标记，双保险 */
 [data-txvpa] {
   display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
